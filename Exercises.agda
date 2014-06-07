@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K #-}
+
 open import HoTT
 
 -- 1.2
@@ -15,13 +17,14 @@ recΣ f x = f (fst x) (snd x)
 
 -- 1.3
 
-ind× : {A B : Type₀} → (C : A → B → Type₀) → ((a : A) → (b : B) → C a b) → ((x : A × B) → C (fst x) (snd x))
+ind× : {A B : Type₀} → (C : A × B → Type₀) → ((a : A) → (b : B) → C (a , b)) → ((x : A × B) → C x)
 ind× C f x = f (fst x) (snd x)
+-- no uppt needed since _×_ posseses judgemental uniqueness
 
-ind×-pair : {A B : Type₀} → (C : A → B → Type₀) → (f : (a : A) → (b : B) → C a b) → (a : A) → (b : B) → ind× C f (a , b) == f a b
+ind×-pair : {A B : Type₀} → (C : A × B → Type₀) → (f : (a : A) → (b : B) → C (a , b)) → (a : A) → (b : B) → ind× C f (a , b) == f a b
 ind×-pair C f a b = idp
 
-indΣ : {A : Type₀} {B : A → Type₀} (C : (a : A) → B a → Type₀) → ((a : A) → (b : B a) → C a b) → (x : Σ A B) → C (fst x) (snd x)
+indΣ : {A : Type₀} {B : A → Type₀} (C : Σ A B → Type₀) → ((a : A) → (b : B a) → C (a , b)) → (x : Σ A B) → C x
 indΣ C f x = f (fst x) (snd x)
 
 -- ...
@@ -53,3 +56,21 @@ module _ {i} {C : Type i} (c₀ : C) (cₛ : ℕ → C → C) where
       recℕ-aux-fst-id (S n) = ap S (recℕ-aux-fst-id n)
 
 -- 1.5
+
+_+'_ : ∀ {i} (A : Type i) (B : Type i) → Type i
+A +' B = Σ Bool (λ b → if b then A else B)
+
+module _ {i} (A : Type i) (B : Type i) where
+  inl' : A → A +' B
+  inl' a = (true , a)
+
+  inr' : B → A +' B
+  inr' b = (false , b)
+
+  module _ {j} (C : A +' B → Type j) (f : (a : A) → C (inl' a)) (g : (b : B) → C (inr' b)) where 
+    ind+' : (x : A +' B) → C x
+    ind+' (true , a) = f a
+    ind+' (false , b) = g b
+
+    ind+'-inl' : (a : A) → ind+' (inl' a) == f a
+    ind+'-inl' a = idp
