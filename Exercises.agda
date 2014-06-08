@@ -119,3 +119,12 @@ module _ {i} (A : Type i) (B : Type i) where
                         f a b ∎
                         where
                           x = pair' a b
+
+-- Theorem 2.1.6
+
+-- a somewhat more book-oriented version of [conc^2-comm]
+eckmann-hilton : ∀ {i} {X : Ptd i} (α β : Ω^ 2 X) → α ∙ β == β ∙ α
+eckmann-hilton α β = α ∙ β   =⟨ ! (∙-unit-r α) ∙ᵣ β ⟩
+                     α ⋆2 β  =⟨ ⋆2=⋆'2 α β ⟩
+                     α ⋆'2 β =⟨ β ∙ₗ (∙-unit-r α) ⟩
+                     β ∙ α   ∎
