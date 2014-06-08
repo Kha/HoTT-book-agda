@@ -74,3 +74,48 @@ module _ {i} (A : Type i) (B : Type i) where
 
     ind+'-inl' : (a : A) → ind+' (inl' a) == f a
     ind+'-inl' a = idp
+
+-- 1.6
+
+_×'_ : ∀ {i} (A : Type i) (B : Type i) → Type i
+A ×' B = (b : Bool) → (if b then A else B)
+
+module _ {i} (A : Type i) (B : Type i) where
+  pair' : A → B → A ×' B
+  pair' a b true = a
+  pair' a b false = b
+
+  fst' : A ×' B → A
+  fst' x = x true
+
+  snd' : A ×' B → B
+  snd' x = x false
+
+  private
+    uppt'-aux : (x : A ×' B) (b : Bool) → pair' (fst' x) (snd' x) b == x b
+    uppt'-aux x true = idp
+    uppt'-aux x false = idp
+
+  uppt' : (x : A ×' B) → pair' (fst' x) (snd' x) == x
+  uppt' = λ= ∘ uppt'-aux
+
+  uppt'-pair' : (a : A) (b : B) → uppt' (pair' a b) == idp
+  uppt'-pair' a b = uppt' (pair' a b) =⟨ λ= uppt'-aux-pair |in-ctx λ= ⟩
+                    λ= (λ x → idp) =⟨ ! (λ=-η idp) ⟩
+                    idp ∎
+                    where
+    uppt'-aux-pair : (x : Bool) → uppt'-aux (pair' a b) x == idp
+    uppt'-aux-pair true = idp
+    uppt'-aux-pair false = idp
+
+  module _ {j} (C : A ×' B → Type j) (f : (a : A) → (b : B) → C (pair' a b)) where 
+    ind×' : (x : A ×' B) → C x
+    ind×' x = transport C (uppt' x) (f (fst' x) (snd' x))
+
+    ind×'-correct : (a : A) (b : B) → ind×' (pair' a b) == f a b
+    ind×'-correct a b = ind×' x =⟨ idp ⟩
+                        transport C (uppt' x) (f a b) =⟨ uppt'-pair' a b |in-ctx (λ x₁ → transport C x₁ (f a b)) ⟩
+                        transport C idp (f a b) =⟨ idp ⟩
+                        f a b ∎
+                        where
+                          x = pair' a b
