@@ -128,3 +128,35 @@ eckmann-hilton α β = α ∙ β   =⟨ ! (∙-unit-r α) ∙ᵣ β ⟩
                      α ⋆2 β  =⟨ ⋆2=⋆'2 α β ⟩
                      α ⋆'2 β =⟨ β ∙ₗ (∙-unit-r α) ⟩
                      β ∙ α   ∎
+
+-- Corollary 2.4.4
+
+_∼_ : ∀ {i j} {A : Type i} {P : A → Type j} (f g : (x : A) → P x) → Type (lmax i j)
+_∼_ {A = A} f g = (x : A) → f x == g x
+
+module _ {i j} {A : Type i} {B : Type j} where
+  ∼-refl : (f : A → B) → f ∼ f
+  ∼-refl f x = idp
+
+  ∼-symm : (f g : A → B) → f ∼ g → g ∼ f
+  ∼-symm f g H x = ! (H x)
+
+  ∼-trans : {f g h : A → B} → f ∼ g → g ∼ h → f ∼ h
+  ∼-trans H H' x = H x ∙ H' x
+
+  ∼-ap-comm : {f g : A → B} (H : f ∼ g) {x y : A} (p : x == y) → H x ∙ ap g p == ap f p ∙ H y
+  ∼-ap-comm H {x = x} idp = ∙-unit-r (H x)
+
+r-complete-! : ∀ {i} {A : Type i} {x y z : A} (p : x == y) (q : y == z) → (p ∙ q) ∙ ! q == p
+r-complete-! p q = ∙-assoc p q (! q) ∙ p ∙ₗ !-inv-r q ∙ ∙-unit-r p
+
+∼-comm : ∀ {i} {A : Type i} (f : A → A) (H : f ∼ idf A) (x : A) → H (f x) == ap f (H x)
+∼-comm {A = A} f H x = H (f x)                     =⟨ ! (r-complete-! (H (f x)) (H x)) ⟩
+                      (H (f x) ∙ H x) ∙ ! (H x)    =⟨ α ∙ᵣ ! (H x) ⟩
+                      (ap f (H x) ∙ H x) ∙ ! (H x) =⟨ r-complete-! (ap f (H x)) (H x) ⟩
+                      ap f (H x) ∎
+                      where
+                        α : H (f x) ∙ H x == ap f (H x) ∙ H x
+                        α = H (f x) ∙ H x              =⟨ H (f x) ∙ₗ ! (ap-idf (H x)) ⟩
+                            H (f x) ∙ ap (idf A) (H x) =⟨ ∼-ap-comm H (H x) ⟩
+                            ap f (H x) ∙ H x ∎
